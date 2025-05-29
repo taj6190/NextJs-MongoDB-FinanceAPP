@@ -11,11 +11,11 @@ import FormDialog from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 
@@ -98,17 +98,13 @@ export default function IncomePage() {
 
   const handleCloseDialog = () => setIsDialogOpen(false);
 
+  // ✅ Fixed: convert string to Date if name is "date"
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (date) => {
-    setFormData((prev) => ({ ...prev, date }));
-  };
-
-  const handleCategoryChange = (value) => {
-    setFormData((prev) => ({ ...prev, category: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "date" ? new Date(value) : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -191,7 +187,11 @@ export default function IncomePage() {
     {
       key: 'category',
       label: 'Category',
-      sortable: true
+      sortable: true,
+      render: (item) => {
+        const category = categories.find((cat) => cat._id === item.category);
+        return category ? category.name : "Unknown";
+      },
     },
     {
       key: 'description',
@@ -327,7 +327,7 @@ export default function IncomePage() {
               id="date"
               name="date"
               type="date"
-              value={formData.date}
+              value={format(formData.date, "yyyy-MM-dd")}
               onChange={handleInputChange}
               className="h-10"
               required

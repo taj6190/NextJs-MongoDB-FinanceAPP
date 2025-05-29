@@ -2,17 +2,17 @@
 
 import { cn } from "@/lib/utils";
 import {
-    ArrowDownCircle,
-    ArrowUpCircle,
-    BarChart,
-    ChevronLeft,
-    ChevronRight,
-    LayoutDashboard,
-    LogOut,
-    Menu,
-    PieChart,
-    Settings,
-    User
+  ArrowDownCircle,
+  ArrowUpCircle,
+  BarChart,
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PieChart,
+  Settings,
+  User
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
@@ -20,12 +20,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Separator } from "./ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -153,7 +153,7 @@ const Sidebar = () => {
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-64">
+        <SheetContent side="left" className="p-0 w-64 bg-white shadow-lg">
           <SidebarContent />
         </SheetContent>
       </Sheet>
