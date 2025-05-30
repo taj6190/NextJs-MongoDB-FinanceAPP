@@ -4,7 +4,10 @@ import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
-// GET single expense
+function isValidObjectId(id) {
+  return ObjectId.isValid(id) && String(new ObjectId(id)) === id;
+}
+
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,39 +16,31 @@ export async function GET(request, { params }) {
     }
 
     const { id } = params;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Expense ID is required" },
-        { status: 400 }
-      );
+    if (!id || !isValidObjectId(id)) {
+      return NextResponse.json({ error: "Invalid expense ID" }, { status: 400 });
     }
 
     const client = await clientPromise;
     const db = client.db("exprense");
-    
+
     const expense = await db.collection("expenses").findOne({
       _id: new ObjectId(id),
-      userId: session.user.id
+      userId: session.user.id,
     });
 
     if (!expense) {
-      return NextResponse.json(
-        { error: "Expense not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
+
+    expense._id = expense._id.toString();
 
     return NextResponse.json(expense);
   } catch (error) {
     console.error("Error fetching expense:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch expense" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch expense" }, { status: 500 });
   }
 }
 
-// PUT update expense
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -54,11 +49,8 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = params;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Expense ID is required" },
-        { status: 400 }
-      );
+    if (!id || !isValidObjectId(id)) {
+      return NextResponse.json({ error: "Invalid expense ID" }, { status: 400 });
     }
 
     const body = await request.json();
@@ -73,41 +65,34 @@ export async function PUT(request, { params }) {
 
     const client = await clientPromise;
     const db = client.db("exprense");
-    
-    const expense = {
+
+    const expenseUpdate = {
       amount: parseFloat(amount),
       category,
       description: description || "",
       date: new Date(date),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     const result = await db.collection("expenses").updateOne(
       { _id: new ObjectId(id), userId: session.user.id },
-      { $set: expense }
+      { $set: expenseUpdate }
     );
 
     if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { error: "Expense not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
 
     return NextResponse.json({
       message: "Expense updated successfully",
-      expense: { ...expense, _id: id }
+      expense: { ...expenseUpdate, _id: id },
     });
   } catch (error) {
     console.error("Error updating expense:", error);
-    return NextResponse.json(
-      { error: "Failed to update expense" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to update expense" }, { status: 500 });
   }
 }
 
-// DELETE expense
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -116,36 +101,25 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = params;
-    if (!id) {
-      return NextResponse.json(
-        { error: "Expense ID is required" },
-        { status: 400 }
-      );
+    if (!id || !isValidObjectId(id)) {
+      return NextResponse.json({ error: "Invalid expense ID" }, { status: 400 });
     }
 
     const client = await clientPromise;
     const db = client.db("exprense");
-    
+
     const result = await db.collection("expenses").deleteOne({
       _id: new ObjectId(id),
-      userId: session.user.id
+      userId: session.user.id,
     });
 
     if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: "Expense not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
 
-    return NextResponse.json({
-      message: "Expense deleted successfully"
-    });
+    return NextResponse.json({ message: "Expense deleted successfully" });
   } catch (error) {
     console.error("Error deleting expense:", error);
-    return NextResponse.json(
-      { error: "Failed to delete expense" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to delete expense" }, { status: 500 });
   }
-} 
+}

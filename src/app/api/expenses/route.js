@@ -1,98 +1,83 @@
 import { authOptions } from "@/lib/auth";
-import { getMongoDb } from "@/lib/mongodb";
+import clientPromise from "@/lib/mongodb";
 import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 
-// GET all expense entries
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = await getMongoDb();
+    const client = await clientPromise;
+    const db = client.db("exprense");
+
     const expenses = await db
       .collection("expenses")
       .find({ userId: session.user.id })
       .toArray();
 
-    return new Response(JSON.stringify(expenses), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    // Convert _id to string
+    const expensesWithIdStr = expenses.map(exp => ({
+      ...exp,
+      _id: exp._id.toString(),
+    }));
+
+    return NextResponse.json(expensesWithIdStr, { status: 200 });
   } catch (error) {
     console.error("Error fetching expenses:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to fetch expenses" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+    return NextResponse.json(
+      { error: "Failed to fetch expenses" },
+      { status: 500 }
     );
   }
 }
 
-// POST new expense entry
 export async function POST(request) {
   try {
-    console.log("Starting expense creation...");
     const session = await getServerSession(authOptions);
     if (!session) {
-      console.log("No session found - unauthorized");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const data = await request.json();
-    console.log("Received expense data:", data);
     const { amount, description, date, category, name } = data;
 
     if (!amount || !name || !date) {
-      console.log("Missing required fields:", { amount, name, date });
-      return new Response(
-        JSON.stringify({ error: "Amount, name, and date are required" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+      return NextResponse.json(
+        { error: "Amount, name, and date are required" },
+        { status: 400 }
       );
     }
 
-    const db = await getMongoDb();
-    console.log("Connected to database:", process.env.MONGODB_DB);
-    
+    const client = await clientPromise;
+    const db = client.db("exprense");
+
     const expenseData = {
       name,
       amount: parseFloat(amount),
-      description,
+      description: description || "",
       date: new Date(date),
       category: category || "Other",
       userId: session.user.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    console.log("Attempting to insert expense:", expenseData);
 
     const result = await db.collection("expenses").insertOne(expenseData);
-    console.log("Expense created successfully:", result);
 
-    return new Response(JSON.stringify(result), {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
-    });
+    const insertedExpense = {
+      ...expenseData,
+      _id: result.insertedId.toString(),
+    };
+
+    return NextResponse.json(insertedExpense, { status: 201 });
   } catch (error) {
     console.error("Error creating expense:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to create expense", details: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+    return NextResponse.json(
+      { error: "Failed to create expense", details: error.message },
+      { status: 500 }
     );
   }
-} 
+}
