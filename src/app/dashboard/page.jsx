@@ -2,36 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { format } from "date-fns";
 import {
-    ArrowDownCircle,
-    ArrowUpCircle,
-    Calendar,
-    DollarSign,
-    TrendingUp,
-    Wallet,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Legend,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 const COLORS = ["#4ade80", "#f87171"];
@@ -164,9 +164,9 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 px-4 sm:px-6 py-4 sm:py-6">
       <div className="flex justify-between items-center">
-        <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-500">Overview of your financial activities</p>
         </div>
@@ -183,7 +183,7 @@ const Dashboard = () => {
       </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center text-green-700 dark:text-green-400">
@@ -240,7 +240,7 @@ const Dashboard = () => {
       </div>
       
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -249,7 +249,7 @@ const Dashboard = () => {
             </CardTitle>
             <CardDescription>Distribution of your financial activities</CardDescription>
           </CardHeader>
-          <CardContent className="h-80">
+          <CardContent className="min-h-[300px] sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -329,8 +329,8 @@ const Dashboard = () => {
           <CardDescription>Your most recent financial activities</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-auto">
+            <table className="min-w-[600px] w-full text-sm">
               <thead>
                 <tr className="border-b">
                   <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
@@ -358,7 +358,7 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 flex justify-center gap-4">
+          <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
             <Button 
               variant="outline" 
               onClick={() => router.push("/income")}
