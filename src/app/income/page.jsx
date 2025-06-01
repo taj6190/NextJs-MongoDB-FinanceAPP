@@ -11,11 +11,11 @@ import FormDialog from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 
@@ -73,11 +73,15 @@ export default function IncomePage() {
 
   const handleOpenDialog = (income = null) => {
     if (income) {
+      // Find the category object by name
+      const matchedCategory = categories.find(
+        (cat) => cat.name === income.category
+      );
       setFormData({
         id: income._id,
         name: income.name || "",
         amount: income.amount.toString(),
-        category: income.category,
+        category: matchedCategory ? matchedCategory._id : "",
         date: new Date(income.date),
         description: income.description || "",
       });
@@ -120,11 +124,17 @@ export default function IncomePage() {
       return;
     }
 
+    // Find the selected category object by ID
+    const selectedCategory = categories.find(
+      (cat) => String(cat._id) === String(formData.category)
+    );
+    const categoryName = selectedCategory ? selectedCategory.name : formData.category;
+
     try {
       const incomeData = {
         name: formData.name,
         amount,
-        category: formData.category,
+        category: categoryName, // Store category name, not ID
         categoryType: 'income',
         date: format(formData.date, "yyyy-MM-dd"),
         description: formData.description,
@@ -189,8 +199,8 @@ export default function IncomePage() {
       label: 'Category',
       sortable: true,
       render: (item) => {
-        const category = categories.find((cat) => cat._id === item.category);
-        return category ? category.name : "Unknown";
+        // Always show the category name directly (since we now store the name)
+        return item.category || "Unknown";
       },
     },
     {
@@ -249,6 +259,7 @@ export default function IncomePage() {
             data={incomes}
             columns={columns}
             pageSize={10}
+            categories={categories}
           />
         </CardContent>
       </Card>

@@ -1,5 +1,9 @@
 "use client";
 
+import { format } from "date-fns";
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
@@ -13,23 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
-import { Edit, Plus, Trash2 } from "lucide-react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 
-const Expenses = () => {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -38,58 +32,39 @@ const Expenses = () => {
     date: new Date(),
     description: "",
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
+    fetchExpenses();
+    fetchCategories();
+  }, []);
 
   const fetchExpenses = async () => {
     try {
       const response = await fetch("/api/expenses");
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch expenses");
-      }
+      if (!response.ok) throw new Error("Failed to fetch expenses");
       const data = await response.json();
       setExpenses(data);
     } catch (error) {
       console.error("Error fetching expenses:", error);
-      toast.error(error.message || "Failed to load expenses");
+      toast.error("Failed to load expense data");
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("/api/categories");
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch categories");
-      }
+      const response = await fetch("/api/categories?type=expense");
+      if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      setCategories(data.filter((cat) => cat.type === "expense"));
+      const expenseCategories = data.filter(
+        (category) => category.type === "expense"
+      );
+      setCategories(expenseCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      toast.error(error.message || "Failed to load categories");
+      toast.error("Failed to load categories");
     }
   };
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (session) {
-        setLoading(true);
-        try {
-          await Promise.all([fetchExpenses(), fetchCategories()]);
-        } catch (error) {
-          console.error("Error loading data:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-    loadData();
-  }, [session]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-US", {
@@ -100,12 +75,16 @@ const Expenses = () => {
 
   const handleOpenDialog = (expense = null) => {
     if (expense) {
+      // Find the category object by name
+      const matchedCategory = categories.find(
+        (cat) => cat.name === expense.category
+      );
       setFormData({
         id: expense._id,
         name: expense.name || "",
         amount: expense.amount.toString(),
-        category: expense.category,
-        date: expense.date ? new Date(expense.date) : new Date(),
+        category: matchedCategory ? matchedCategory._id : "",
+        date: new Date(expense.date),
         description: expense.description || "",
       });
       setIsEditing(true);
@@ -123,17 +102,14 @@ const Expenses = () => {
     setIsDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-  };
+  const handleCloseDialog = () => setIsDialogOpen(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCategoryChange = (value) => {
-    setFormData((prev) => ({ ...prev, category: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "date" ? new Date(value) : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -149,16 +125,17 @@ const Expenses = () => {
       return;
     }
 
-    if (!(formData.date instanceof Date) || isNaN(formData.date)) {
-      toast.error("Please select a valid date");
-      return;
-    }
+    // Find the selected category object by ID
+    const selectedCategory = categories.find(
+      (cat) => String(cat._id) === String(formData.category)
+    );
+    const categoryName = selectedCategory ? selectedCategory.name : formData.category;
 
     try {
       const expenseData = {
         name: formData.name,
         amount,
-        category: formData.category,
+        category: categoryName, // Store category name, not ID
         categoryType: "expense",
         date: format(formData.date, "yyyy-MM-dd"),
         description: formData.description,
@@ -176,8 +153,7 @@ const Expenses = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to save expense");
+        throw new Error("Failed to save expense");
       }
 
       await fetchExpenses();
@@ -187,7 +163,7 @@ const Expenses = () => {
       handleCloseDialog();
     } catch (error) {
       console.error("Error saving expense:", error);
-      toast.error(error.message || "Error saving expense");
+      toast.error("Error saving expense");
     }
   };
 
@@ -198,15 +174,14 @@ const Expenses = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete expense");
+        throw new Error("Failed to delete expense");
       }
 
       await fetchExpenses();
       toast.success("Expense deleted successfully");
     } catch (error) {
       console.error("Error deleting expense:", error);
-      toast.error(error.message || "Error deleting expense");
+      toast.error("Error deleting expense");
     }
   };
 
@@ -227,8 +202,9 @@ const Expenses = () => {
       label: "Category",
       sortable: true,
       render: (item) => {
-        const category = categories.find((cat) => cat._id === item.category);
-        return category ? category.name : "Unknown";
+        // Fix: always compare as strings for ObjectId
+        const category = categories.find((cat) => String(cat._id) === String(item.category));
+        return category ? category.name : (item.category || "Unknown");
       },
     },
     {
@@ -246,7 +222,11 @@ const Expenses = () => {
       label: "Actions",
       render: (item) => (
         <div className="flex justify-end space-x-2">
-          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleOpenDialog(item)}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
@@ -262,14 +242,6 @@ const Expenses = () => {
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -277,7 +249,7 @@ const Expenses = () => {
           <h1 className="text-3xl font-bold text-gray-800">Expenses</h1>
           <p className="text-gray-500">Track your expenses</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center bg-amber-400 hover:bg-amber-700">
+        <Button onClick={() => handleOpenDialog()} className="flex items-center">
           <Plus className="mr-2 h-4 w-4" /> Add Expense
         </Button>
       </div>
@@ -287,7 +259,7 @@ const Expenses = () => {
           <CardTitle>Expense Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable data={expenses} columns={columns} pageSize={10} />
+          <DataTable data={expenses} columns={columns} pageSize={10} categories={categories} />
         </CardContent>
       </Card>
 
@@ -338,7 +310,12 @@ const Expenses = () => {
             <Label htmlFor="category" className="text-sm font-medium">
               Category
             </Label>
-            <Select value={formData.category} onValueChange={handleCategoryChange}>
+            <Select
+              value={formData.category}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, category: value }))
+              }
+            >
               <SelectTrigger className="h-10">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -357,34 +334,31 @@ const Expenses = () => {
             <Label htmlFor="date" className="text-sm font-medium">
               Date
             </Label>
-            <DayPicker
-              mode="single"
-              selected={formData.date}
-              onSelect={(date) => date && setFormData((prev) => ({ ...prev, date }))}
+            <Input
+              id="date"
+              name="date"
+              type="date"
+              value={format(formData.date, "yyyy-MM-dd")}
+              onChange={handleInputChange}
+              className="h-10"
               required
-              className="rounded-md border border-gray-300 p-2"
             />
           </div>
-
-          {/* Added Description Field */}
           <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium">
               Description
             </Label>
-            <textarea
+            <Input
               id="description"
               name="description"
-              rows={3}
               value={formData.description}
               onChange={handleInputChange}
               placeholder="Optional notes or details"
-              className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-10"
             />
           </div>
         </div>
       </FormDialog>
     </div>
   );
-};
-
-export default Expenses;
+}

@@ -16,7 +16,7 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = params;
-    const { amount, category, description, date } = await request.json();
+    const { name, amount, category, description, date } = await request.json();
 
     if (!amount || !category || !date) {
       return NextResponse.json(
@@ -35,6 +35,7 @@ export async function PUT(request, { params }) {
       },
       {
         $set: {
+          name, // <-- fix: update name field
           amount: parseFloat(amount),
           category,
           description: description || "",
@@ -94,4 +95,4 @@ export async function DELETE(request, { params }) {
       { status: 500 }
     );
   }
-} 
+}

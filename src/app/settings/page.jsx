@@ -10,29 +10,37 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, LogOut, Trash2, User } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [profileData, setProfileData] = useState({
     name: session?.user?.name || "",
     email: session?.user?.email || "",
   });
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  
+
   const [loading, setLoading] = useState({
     profile: false,
     password: false,
     delete: false,
   });
+
+  // Ensure profileData updates if session changes (e.g., after update)
+  useEffect(() => {
+    setProfileData({
+      name: session?.user?.name || "",
+      email: session?.user?.email || "",
+    });
+  }, [session]);
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -46,7 +54,6 @@ export default function SettingsPage() {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    
     if (!profileData.name.trim()) {
       toast({
         title: "Error",
@@ -55,9 +62,7 @@ export default function SettingsPage() {
       });
       return;
     }
-    
     setLoading(prev => ({ ...prev, profile: true }));
-    
     try {
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -68,19 +73,10 @@ export default function SettingsPage() {
           name: profileData.name,
         }),
       });
-
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
-
-      await update({
-        ...session,
-        user: {
-          ...session.user,
-          name: profileData.name,
-        },
-      });
-      
+      await update(); // Only call update() to refresh session
       toast({
         title: "Success",
         description: "Profile updated successfully"
@@ -98,7 +94,6 @@ export default function SettingsPage() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       toast({
         title: "Error",
@@ -107,7 +102,6 @@ export default function SettingsPage() {
       });
       return;
     }
-    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
         title: "Error",
@@ -116,7 +110,6 @@ export default function SettingsPage() {
       });
       return;
     }
-    
     if (passwordData.newPassword.length < 6) {
       toast({
         title: "Error",
@@ -125,9 +118,7 @@ export default function SettingsPage() {
       });
       return;
     }
-    
     setLoading(prev => ({ ...prev, password: true }));
-    
     try {
       const response = await fetch('/api/user/password', {
         method: 'PUT',
@@ -199,138 +190,146 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="container max-w-2xl mx-auto py-12 space-y-10">
+      <div className="flex items-center justify-between border-b pb-6 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <p className="text-sm text-muted-foreground">Manage your account settings</p>
+          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
+          <p className="text-base text-muted-foreground mt-1">Manage your account and security preferences</p>
         </div>
         <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
           <LogOut className="h-4 w-4" />
           Sign Out
         </Button>
       </div>
-
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="flex w-full gap-2 bg-muted p-2 rounded-lg">
+          <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow">
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger value="security" className="flex items-center gap-2 px-4 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow">
             <Lock className="h-4 w-4" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="danger" className="flex items-center gap-2">
+          <TabsTrigger value="danger" className="flex items-center gap-2 px-4 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow">
             <Trash2 className="h-4 w-4" />
             Danger Zone
           </TabsTrigger>
         </TabsList>
-
         <TabsContent value="profile">
-          <Card>
+          <Card className="shadow-lg border-0">
             <CardHeader>
-              <CardTitle className="text-lg">Profile Information</CardTitle>
+              <CardTitle className="text-xl font-semibold">Profile Information</CardTitle>
               <CardDescription>Update your personal information</CardDescription>
             </CardHeader>
-            <form onSubmit={handleProfileSubmit}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={profileData.name}
-                    onChange={handleProfileChange}
-                    placeholder="Enter your name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    value={profileData.email}
-                    disabled
-                    className="bg-muted"
-                  />
+            <form onSubmit={handleProfileSubmit} autoComplete="off">
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="name" className="font-medium">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={profileData.name}
+                      onChange={handleProfileChange}
+                      placeholder="Enter your name"
+                      className="h-11 text-lg px-4 border rounded-md focus:ring-2 focus:ring-primary"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="email" className="font-medium">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      value={profileData.email}
+                      disabled
+                      className="h-11 text-lg px-4 bg-muted border rounded-md"
+                    />
+                  </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={loading.profile}>
+              <CardFooter className="flex justify-end">
+                <Button type="submit" disabled={loading.profile} className="px-8 py-2 text-base font-semibold">
                   {loading.profile ? "Saving..." : "Save Changes"}
                 </Button>
               </CardFooter>
             </form>
           </Card>
         </TabsContent>
-
         <TabsContent value="security">
-          <Card>
+          <Card className="shadow-lg border-0">
             <CardHeader>
-              <CardTitle className="text-lg">Change Password</CardTitle>
+              <CardTitle className="text-xl font-semibold">Change Password</CardTitle>
               <CardDescription>Update your password to keep your account secure</CardDescription>
             </CardHeader>
-            <form onSubmit={handlePasswordSubmit}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    name="currentPassword"
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Enter current password"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    name="newPassword"
-                    type="password"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    placeholder="Confirm new password"
-                  />
+            <form onSubmit={handlePasswordSubmit} autoComplete="off">
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="currentPassword" className="font-medium">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Enter current password"
+                      className="h-11 px-4 border rounded-md focus:ring-2 focus:ring-primary"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="newPassword" className="font-medium">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Enter new password"
+                      className="h-11 px-4 border rounded-md focus:ring-2 focus:ring-primary"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="confirmPassword" className="font-medium">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Confirm new password"
+                      className="h-11 px-4 border rounded-md focus:ring-2 focus:ring-primary"
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={loading.password}>
+              <CardFooter className="flex justify-end">
+                <Button type="submit" disabled={loading.password} className="px-8 py-2 text-base font-semibold">
                   {loading.password ? "Updating..." : "Update Password"}
                 </Button>
               </CardFooter>
             </form>
           </Card>
         </TabsContent>
-
         <TabsContent value="danger">
-          <Card className="border-destructive">
+          <Card className="shadow-lg border-0 border-destructive">
             <CardHeader>
-              <CardTitle className="text-lg text-destructive">Delete Account</CardTitle>
+              <CardTitle className="text-xl font-semibold text-destructive">Delete Account</CardTitle>
               <CardDescription>Permanently delete your account and all associated data</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-base text-muted-foreground mb-4">
                 This action cannot be undone. Please be certain.
               </p>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-end">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={loading.delete}>
+                  <Button variant="destructive" disabled={loading.delete} className="px-8 py-2 text-base font-semibold">
                     {loading.delete ? "Deleting..." : "Delete Account"}
                   </Button>
                 </AlertDialogTrigger>
