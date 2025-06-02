@@ -228,7 +228,7 @@ export default function ReportsPage() {
     }).format(amount);
   };
 
-  const handleExport = (format) => {
+  const handleExport = (exportFormat) => {
     const filteredExpenses = expenses.filter(expense => {
       const expenseDate = new Date(expense.date);
       const isInDateRange = expenseDate >= dateRange.from && expenseDate <= dateRange.to;
@@ -241,12 +241,13 @@ export default function ReportsPage() {
       return incomeDate >= dateRange.from && incomeDate <= dateRange.to;
     });
 
-    if (format === 'csv') {
+    if (exportFormat === 'csv') {
       const csvContent = [
-        ["Type", "Date", "Category", "Description", "Amount"],
+        ["Type", "Date", "Name", "Category", "Description", "Amount"],
         ...filteredExpenses.map(expense => [
           "Expense",
           format(new Date(expense.date), "yyyy-MM-dd"),
+          expense.name || "",
           expense.category,
           expense.description || "",
           expense.amount
@@ -254,6 +255,7 @@ export default function ReportsPage() {
         ...filteredIncomes.map(income => [
           "Income",
           format(new Date(income.date), "yyyy-MM-dd"),
+          income.name || "",
           income.category,
           income.description || "",
           income.amount
@@ -268,7 +270,7 @@ export default function ReportsPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else if (format === 'pdf') {
+    } else if (exportFormat === 'pdf') {
       handlePdfDownload(filteredExpenses, filteredIncomes);
     }
   };
@@ -344,18 +346,18 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-2 sm:p-4 space-y-4 max-w-7xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-bold">Financial Reports</h1>
-          <p className="text-sm text-muted-foreground">Analyze your financial data</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Financial Reports</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Analyze your financial data</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             onClick={() => handleExport('csv')}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <FileDown className="h-4 w-4" />
             Export CSV
@@ -364,15 +366,14 @@ export default function ReportsPage() {
             onClick={() => handleExport('pdf')}
             disabled={isGeneratingPdf}
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <Download className="h-4 w-4" />
             {isGeneratingPdf ? "Generating PDF..." : "Export PDF"}
           </Button>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-2 sm:gap-4">
         <Select
           value={selectedDateRange}
           onValueChange={setSelectedDateRange}
@@ -447,8 +448,7 @@ export default function ReportsPage() {
           </SelectContent>
         </Select>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3">
             <CardTitle className="text-sm font-medium text-red-700 dark:text-red-400">Total Expenses</CardTitle>
@@ -521,14 +521,13 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
-
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Monthly Overview</CardTitle>
           <CardDescription className="text-xs">Income and expenses over time</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
+          <div className="h-[300px] overflow-x-auto">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

@@ -190,19 +190,19 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto py-12 space-y-10">
-      <div className="flex items-center justify-between border-b pb-6 mb-6">
+    <div className="container max-w-2xl mx-auto py-8 sm:py-12 space-y-8 sm:space-y-10 px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4 sm:pb-6 mb-4 sm:mb-6 gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-          <p className="text-base text-muted-foreground mt-1">Manage your account and security preferences</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Account Settings</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Manage your account and security preferences</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+        <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 w-full sm:w-auto">
           <LogOut className="h-4 w-4" />
           Sign Out
         </Button>
       </div>
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="flex w-full gap-2 bg-muted p-2 rounded-lg">
+        <TabsList className="flex w-full gap-2 bg-muted p-2 rounded-lg overflow-x-auto">
           <TabsTrigger value="profile" className="flex items-center gap-2 px-4 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow">
             <User className="h-4 w-4" />
             Profile
@@ -329,7 +329,7 @@ export default function SettingsPage() {
             <CardFooter className="flex justify-end">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={loading.delete} className="px-8 py-2 text-base font-semibold">
+                  <Button variant="destructive" disabled={loading.delete} className="px-8 py-2 text-base font-semibold bg-red-700">
                     {loading.delete ? "Deleting..." : "Delete Account"}
                   </Button>
                 </AlertDialogTrigger>

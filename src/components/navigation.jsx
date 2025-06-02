@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "./sidebar";
-import { ThemeToggle } from "./theme-toggle";
 
 const Navigation = ({ children }) => {
   const { status } = useSession();
@@ -53,15 +52,14 @@ const Navigation = ({ children }) => {
 
     // Show main layout with navigation
     return (
-      <div className="min-h-screen flex">
+      <>
         <Sidebar />
-        <main className="flex-1 p-6 bg-background">
-          <div className="absolute top-4 right-4">
-            <ThemeToggle />
+        <main className="min-h-screen bg-background px-2 sm:px-4 md:px-8 pt-6 pb-10 max-w-7xl mx-auto w-full">
+          <div className="w-full h-full rounded-xl bg-white dark:bg-zinc-900 shadow-md border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 md:p-8">
+            {children}
           </div>
-          {children}
         </main>
-      </div>
+      </>
     );
   };
 

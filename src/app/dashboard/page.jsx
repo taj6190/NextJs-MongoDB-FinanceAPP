@@ -2,36 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from "@/components/ui/card";
 import { format } from "date-fns";
 import {
-  ArrowDownCircle,
-  ArrowUpCircle,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Wallet,
+    ArrowDownCircle,
+    ArrowUpCircle,
+    Calendar,
+    DollarSign,
+    TrendingUp,
+    Wallet,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
 
 const COLORS = ["#4ade80", "#f87171"];
@@ -164,18 +164,18 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500">Overview of your financial activities</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-500 text-sm sm:text-base">Overview of your financial activities</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/income")}>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => router.push("/income")} className="flex-1 sm:flex-none">
             <DollarSign className="mr-2 h-4 w-4" />
             Add Income
           </Button>
-          <Button variant="outline" onClick={() => router.push("/expenses")}>
+          <Button variant="outline" onClick={() => router.push("/expenses")} className="flex-1 sm:flex-none">
             <Calendar className="mr-2 h-4 w-4" />
             Add Expense
           </Button>
@@ -183,7 +183,7 @@ const Dashboard = () => {
       </div>
       
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center text-green-700 dark:text-green-400">
@@ -240,7 +240,7 @@ const Dashboard = () => {
       </div>
       
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -330,7 +330,7 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[500px] text-sm">
               <thead>
                 <tr className="border-b">
                   <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
@@ -358,11 +358,11 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 flex justify-center gap-4">
+          <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
             <Button 
               variant="outline" 
               onClick={() => router.push("/income")}
-              className="flex items-center"
+              className="flex items-center justify-center"
             >
               <DollarSign className="mr-2 h-4 w-4" />
               View All Income
@@ -370,7 +370,7 @@ const Dashboard = () => {
             <Button 
               variant="outline" 
               onClick={() => router.push("/expenses")}
-              className="flex items-center"
+              className="flex items-center justify-center"
             >
               <Calendar className="mr-2 h-4 w-4" />
               View All Expenses
@@ -382,4 +382,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

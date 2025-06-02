@@ -1,3 +1,4 @@
+import Footer from "@/components/footer";
 import Navigation from "@/components/navigation";
 import AuthProvider from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         >
           <AuthProvider>
             <Navigation>{children}</Navigation>
+            <Footer />
             <Toaster />
           </AuthProvider>
         </ThemeProvider>

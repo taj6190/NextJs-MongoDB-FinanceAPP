@@ -190,25 +190,23 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 px-2 sm:px-0 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Categories</h1>
-          <p className="text-gray-500">Manage your income and expense categories</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Categories</h1>
+          <p className="text-gray-500 text-sm sm:text-base">Manage your income and expense categories</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center">
+        <Button onClick={() => handleOpenDialog()} className="flex items-center w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Add Category
         </Button>
       </div>
-
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="overflow-x-auto w-full sm:w-auto">
           <TabsTrigger value="all">All Categories</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="expense">Expense</TabsTrigger>
         </TabsList>
-
-        <TabsContent value={activeTab} className="mt-6">
+        <TabsContent value={activeTab} className="mt-4 sm:mt-6">
           <Card>
             <CardHeader>
               <CardTitle>
@@ -220,16 +218,18 @@ const CategoriesPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <DataTable
-                data={filteredCategories}
-                columns={activeTab === "all" ? columns : columns.filter(col => col.key !== 'type')}
-                pageSize={10}
-              />
+              <div className="overflow-x-auto">
+                <DataTable
+                  data={filteredCategories}
+                  columns={activeTab === "all" ? columns : columns.filter(col => col.key !== 'type')}
+                  pageSize={10}
+                  categories={categories}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
       <FormDialog
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}

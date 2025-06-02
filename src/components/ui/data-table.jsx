@@ -1,20 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useEffect, useState } from 'react';
 
@@ -113,17 +114,20 @@ export function DataTable({
         </Select>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
                 <TableHead
                   key={column.key}
-                  className={column.sortable ? "cursor-pointer" : ""}
+                  className={cn(
+                    column.key === 'actions' ? 'text-center w-[120px]' : '',
+                    column.sortable ? 'cursor-pointer' : ''
+                  )}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
-                  <div className="flex items-center gap-1">
+                  <div className={column.key === 'actions' ? 'justify-center flex w-full' : 'flex items-center gap-1'}>
                     {column.label}
                     {column.sortable && <SortIcon columnKey={column.key} />}
                   </div>
@@ -134,9 +138,12 @@ export function DataTable({
           <TableBody>
             {paginatedData.length > 0 ? (
               paginatedData.map((item) => (
-                <TableRow key={item._id}>
+                <TableRow key={item._id} className="hover:bg-accent/30 transition">
                   {columns.map((column) => (
-                    <TableCell key={column.key}>
+                    <TableCell
+                      key={column.key}
+                      className={column.key === 'actions' ? 'text-center align-middle' : ''}
+                    >
                       {column.render ? column.render(item) : item[column.key]}
                     </TableCell>
                   ))}
@@ -178,4 +185,4 @@ export function DataTable({
       </div>
     </div>
   );
-} 
+}

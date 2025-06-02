@@ -243,23 +243,24 @@ export default function ExpensesPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 px-2 sm:px-0 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Expenses</h1>
-          <p className="text-gray-500">Track your expenses</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Expenses</h1>
+          <p className="text-gray-500 text-sm sm:text-base">Track your expenses</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center">
+        <Button onClick={() => handleOpenDialog()} className="flex items-center w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Add Expense
         </Button>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Expense Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable data={expenses} columns={columns} pageSize={10} categories={categories} />
+          <div className="overflow-x-auto">
+            <DataTable data={expenses} columns={columns} pageSize={10} categories={categories} />
+          </div>
         </CardContent>
       </Card>
 

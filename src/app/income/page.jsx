@@ -239,28 +239,29 @@ export default function IncomePage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 px-2 sm:px-0 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Income</h1>
-          <p className="text-gray-500">Track your income sources</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Income</h1>
+          <p className="text-gray-500 text-sm sm:text-base">Track your income sources</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center">
+        <Button onClick={() => handleOpenDialog()} className="flex items-center w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Add Income
         </Button>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Income Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={incomes}
-            columns={columns}
-            pageSize={10}
-            categories={categories}
-          />
+          <div className="overflow-x-auto">
+            <DataTable
+              data={incomes}
+              columns={columns}
+              pageSize={10}
+              categories={categories}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -342,6 +343,19 @@ export default function IncomePage() {
               onChange={handleInputChange}
               className="h-10"
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-sm font-medium">
+              Description
+            </Label>
+            <Input
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Optional notes or details"
+              className="h-10"
             />
           </div>
         </div>
