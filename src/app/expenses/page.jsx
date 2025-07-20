@@ -22,8 +22,10 @@ import { toast } from "@/components/ui/sonner";
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [categories, setCategories] = useState([]);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
   const [formData, setFormData] = useState({
     id: null,
     name: "",
@@ -32,6 +34,7 @@ export default function ExpensesPage() {
     date: new Date(),
     description: "",
   });
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export default function ExpensesPage() {
     fetchCategories();
   }, []);
 
-  const fetchExpenses = async () => {
+  async function fetchExpenses() {
     try {
       const response = await fetch("/api/expenses");
       if (!response.ok) throw new Error("Failed to fetch expenses");
@@ -49,33 +52,28 @@ export default function ExpensesPage() {
       console.error("Error fetching expenses:", error);
       toast.error("Failed to load expense data");
     }
-  };
+  }
 
-  const fetchCategories = async () => {
+  async function fetchCategories() {
     try {
       const response = await fetch("/api/categories?type=expense");
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      const expenseCategories = data.filter(
-        (category) => category.type === "expense"
-      );
-      setCategories(expenseCategories);
+      setCategories(data.filter((c) => c.type === "expense"));
     } catch (error) {
       console.error("Error fetching categories:", error);
       toast.error("Failed to load categories");
     }
-  };
+  }
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
     }).format(amount);
-  };
 
-  const handleOpenDialog = (expense = null) => {
+  function openDialog(expense = null) {
     if (expense) {
-      // Find the category object by name
       const matchedCategory = categories.find(
         (cat) => cat.name === expense.category
       );
@@ -100,20 +98,23 @@ export default function ExpensesPage() {
       setIsEditing(false);
     }
     setIsDialogOpen(true);
-  };
+  }
 
-  const handleCloseDialog = () => setIsDialogOpen(false);
+  function closeDialog() {
+    setIsDialogOpen(false);
+  }
 
-  const handleInputChange = (e) => {
+  function handleInputChange(e) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: name === "date" ? new Date(value) : value,
     }));
-  };
+  }
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
+
     if (!formData.name || !formData.amount || !formData.category) {
       toast.error("Please fill in all required fields");
       return;
@@ -125,7 +126,8 @@ export default function ExpensesPage() {
       return;
     }
 
-    // Find the selected category object by ID
+    setLoading(true);
+
     const selectedCategory = categories.find(
       (cat) => String(cat._id) === String(formData.category)
     );
@@ -135,7 +137,7 @@ export default function ExpensesPage() {
       const expenseData = {
         name: formData.name,
         amount,
-        category: categoryName, // Store category name, not ID
+        category: categoryName,
         categoryType: "expense",
         date: format(formData.date, "yyyy-MM-dd"),
         description: formData.description,
@@ -146,44 +148,34 @@ export default function ExpensesPage() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(expenseData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to save expense");
-      }
+      if (!response.ok) throw new Error("Failed to save expense");
 
       await fetchExpenses();
-      toast.success(
-        isEditing ? "Expense updated successfully" : "Expense added successfully"
-      );
-      handleCloseDialog();
+      toast.success(isEditing ? "Expense updated successfully" : "Expense added successfully");
+      closeDialog();
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error("Error saving expense");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  const handleDelete = async (id) => {
+  async function handleDelete(id) {
     try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete expense");
-      }
-
+      const response = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Failed to delete expense");
       await fetchExpenses();
-      toast.success("Expense deleted successfully");
+      toast.success("Expense deleted");
     } catch (error) {
       console.error("Error deleting expense:", error);
       toast.error("Error deleting expense");
     }
-  };
+  }
 
   const columns = [
     {
@@ -192,25 +184,17 @@ export default function ExpensesPage() {
       sortable: true,
       render: (item) => format(new Date(item.date), "MMM dd, yyyy"),
     },
-    {
-      key: "name",
-      label: "Name",
-      sortable: true,
-    },
+    { key: "name", label: "Name", sortable: true },
     {
       key: "category",
       label: "Category",
       sortable: true,
       render: (item) => {
-        // Fix: always compare as strings for ObjectId
         const category = categories.find((cat) => String(cat._id) === String(item.category));
-        return category ? category.name : (item.category || "Unknown");
+        return category ? category.name : item.category || "Unknown";
       },
     },
-    {
-      key: "description",
-      label: "Description",
-    },
+    { key: "description", label: "Description" },
     {
       key: "amount",
       label: "Amount",
@@ -222,11 +206,7 @@ export default function ExpensesPage() {
       label: "Actions",
       render: (item) => (
         <div className="flex justify-end space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleOpenDialog(item)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => openDialog(item)}>
             <Edit className="h-4 w-4" />
           </Button>
           <Button
@@ -243,30 +223,34 @@ export default function ExpensesPage() {
   ];
 
   return (
-    <div className="space-y-6 px-2 sm:px-0 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+    <div className="max-w-4xl mx-auto px-2 sm:px-0 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Expenses</h1>
           <p className="text-gray-500 text-sm sm:text-base">Track your expenses</p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center w-full sm:w-auto">
+        <Button onClick={() => openDialog()} className="flex items-center w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" /> Add Expense
         </Button>
       </div>
+
+      {/* Expense Table */}
       <Card>
         <CardHeader>
           <CardTitle>Expense Records</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <DataTable data={expenses} columns={columns} pageSize={10} categories={categories} />
+            <DataTable data={expenses} columns={columns} pageSize={10} />
           </div>
         </CardContent>
       </Card>
 
+      {/* Expense Form Dialog */}
       <FormDialog
         isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
+        onClose={closeDialog}
         title={isEditing ? "Edit Expense" : "Add New Expense"}
         description={
           isEditing
@@ -278,24 +262,23 @@ export default function ExpensesPage() {
         isLoading={loading}
       >
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">
-              Expense Name
-            </Label>
+          {/* Expense Name */}
+          <div>
+            <Label htmlFor="name">Expense Name</Label>
             <Input
               id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
               placeholder="e.g., Rent, Groceries"
-              className="h-10"
               required
+              className="h-10"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-medium">
-              Amount
-            </Label>
+
+          {/* Amount */}
+          <div>
+            <Label htmlFor="amount">Amount</Label>
             <Input
               id="amount"
               name="amount"
@@ -303,14 +286,14 @@ export default function ExpensesPage() {
               value={formData.amount}
               onChange={handleInputChange}
               placeholder="Enter amount"
-              className="h-10"
               required
+              className="h-10"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="category" className="text-sm font-medium">
-              Category
-            </Label>
+
+          {/* Category */}
+          <div>
+            <Label htmlFor="category">Category</Label>
             <Select
               value={formData.category}
               onValueChange={(value) =>
@@ -321,34 +304,32 @@ export default function ExpensesPage() {
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {categories
-                  .filter((category) => category.type === "expense")
-                  .map((category) => (
-                    <SelectItem key={category._id} value={category._id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
+                {categories.map((category) => (
+                  <SelectItem key={category._id} value={category._id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="date" className="text-sm font-medium">
-              Date
-            </Label>
+
+          {/* Date */}
+          <div>
+            <Label htmlFor="date">Date</Label>
             <Input
               id="date"
               name="date"
               type="date"
               value={format(formData.date, "yyyy-MM-dd")}
               onChange={handleInputChange}
-              className="h-10"
               required
+              className="h-10"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description
-            </Label>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Description</Label>
             <Input
               id="description"
               name="description"

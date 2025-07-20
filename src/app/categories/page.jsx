@@ -1,4 +1,7 @@
-'use client';
+"use client";
+
+import { Edit, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,16 +9,15 @@ import { DataTable } from "@/components/ui/data-table";
 import FormDialog from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Edit, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -23,22 +25,25 @@ const CategoriesPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     id: null,
     name: "",
     type: "expense",
   });
 
+  // Fetch categories from API and sort alphabetically
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      setCategories(data);
+      setCategories(data.sort((a, b) => a.name.localeCompare(b.name)));
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories');
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -48,10 +53,13 @@ const CategoriesPage = () => {
     fetchCategories();
   }, []);
 
-  const filteredCategories = categories.filter((category) =>
-    activeTab === "all" ? true : category.type === activeTab
-  );
+  // Filter categories based on active tab
+  const filteredCategories =
+    activeTab === "all"
+      ? categories
+      : categories.filter((category) => category.type === activeTab);
 
+  // Open dialog for new or existing category
   const handleOpenDialog = (category = null) => {
     if (category) {
       setFormData({
@@ -84,6 +92,7 @@ const CategoriesPage = () => {
     setFormData((prev) => ({ ...prev, type: value }));
   };
 
+  // Submit form data to create or update category
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,38 +102,46 @@ const CategoriesPage = () => {
     }
 
     try {
-      const url = isEditing ? `/api/categories/${formData.id}` : '/api/categories';
-      const method = isEditing ? 'PUT' : 'POST';
+      setSubmitting(true);
+      const url = isEditing ? `/api/categories/${formData.id}` : "/api/categories";
+      const method = isEditing ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
           type: formData.type,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save category');
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || "Failed to save category");
+      }
 
       await fetchCategories();
       toast.success(isEditing ? "Category updated successfully" : "Category added successfully");
       handleCloseDialog();
     } catch (error) {
       console.error(error);
-      toast.error("Error saving category");
+      toast.error(error.message || "Error saving category");
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  // Delete category with confirmation
   const handleDelete = async (id) => {
+    const confirmed = confirm("Are you sure you want to delete this category?");
+    if (!confirmed) return;
+
     try {
       const response = await fetch(`/api/categories/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!response.ok) throw new Error('Failed to delete category');
+      if (!response.ok) throw new Error("Failed to delete category");
 
       await fetchCategories();
       toast.success("Category deleted successfully");
@@ -134,15 +151,16 @@ const CategoriesPage = () => {
     }
   };
 
+  // Table columns for DataTable component
   const columns = [
     {
-      key: 'name',
-      label: 'Name',
-      sortable: true
+      key: "name",
+      label: "Name",
+      sortable: true,
     },
     {
-      key: 'type',
-      label: 'Type',
+      key: "type",
+      label: "Type",
       sortable: true,
       render: (item) => (
         <span
@@ -154,18 +172,14 @@ const CategoriesPage = () => {
         >
           {item.type}
         </span>
-      )
+      ),
     },
     {
-      key: 'actions',
-      label: 'Actions',
+      key: "actions",
+      label: "Actions",
       render: (item) => (
         <div className="flex justify-end space-x-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleOpenDialog(item)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(item)}>
             <Edit className="h-4 w-4" />
           </Button>
           <Button
@@ -177,8 +191,8 @@ const CategoriesPage = () => {
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
   if (loading) {
@@ -190,22 +204,31 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="space-y-6 px-2 sm:px-0 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+    <div className="max-w-4xl mx-auto px-2 sm:px-0 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Categories</h1>
-          <p className="text-gray-500 text-sm sm:text-base">Manage your income and expense categories</p>
+          <p className="text-gray-500 text-sm sm:text-base">
+            Manage your income and expense categories
+          </p>
         </div>
-        <Button onClick={() => handleOpenDialog()} className="flex items-center w-full sm:w-auto">
+        <Button
+          onClick={() => handleOpenDialog()}
+          className="flex items-center w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" /> Add Category
         </Button>
       </div>
+
+      {/* Tabs */}
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="overflow-x-auto w-full sm:w-auto">
           <TabsTrigger value="all">All Categories</TabsTrigger>
           <TabsTrigger value="income">Income</TabsTrigger>
           <TabsTrigger value="expense">Expense</TabsTrigger>
         </TabsList>
+
         <TabsContent value={activeTab} className="mt-4 sm:mt-6">
           <Card>
             <CardHeader>
@@ -213,34 +236,43 @@ const CategoriesPage = () => {
                 {activeTab === "all"
                   ? "All Categories"
                   : activeTab === "income"
-                    ? "Income Categories"
-                    : "Expense Categories"}
+                  ? "Income Categories"
+                  : "Expense Categories"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <DataTable
-                  data={filteredCategories}
-                  columns={activeTab === "all" ? columns : columns.filter(col => col.key !== 'type')}
-                  pageSize={10}
-                  categories={categories}
-                />
+                {filteredCategories.length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">No categories found.</p>
+                ) : (
+                  <DataTable
+                    data={filteredCategories}
+                    columns={
+                      activeTab === "all" ? columns : columns.filter((col) => col.key !== "type")
+                    }
+                    pageSize={10}
+                    categories={categories}
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Form Dialog */}
       <FormDialog
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         title={isEditing ? "Edit Category" : "Add New Category"}
-        description={isEditing
-          ? "Update your category details below"
-          : "Fill in the details to create a new category"
+        description={
+          isEditing
+            ? "Update your category details below"
+            : "Fill in the details to create a new category"
         }
         onSubmit={handleSubmit}
         submitText={isEditing ? "Save Changes" : "Create Category"}
-        isLoading={loading}
+        isLoading={submitting}
       >
         <div className="space-y-4">
           <div className="space-y-2">

@@ -103,9 +103,7 @@ export default function RegisterPage() {
           Already have an account?{' '}
           <a href="/login" className="text-blue-600 hover:underline">Sign in</a>
         </div> */}
-        <div className="text-center text-sm text-muted-foreground mt-2">
-          Don’t have an account? Please contact the admin at <a href="mailto:taj_y@outlook.com" className="underline">taj_y@outlook.com</a>.
-        </div>
+        
 
       </div>
     </div>

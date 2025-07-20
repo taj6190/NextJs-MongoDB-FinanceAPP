@@ -3,10 +3,15 @@ import Navigation from "@/components/navigation";
 import AuthProvider from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { Inter } from "next/font/google";
+import { Anek_Bangla, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+const anekBangla = Anek_Bangla({
+  subsets: ["bengali"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-anek-bangla",
+});
 
 export const metadata = {
   title: "Exprense - Expense Tracker",
@@ -16,8 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        {/* Wrap with client-only components */}
+      <body className={`${inter.className} ${anekBangla.className}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
