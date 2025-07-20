@@ -61,7 +61,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch expenses
       const expensesResponse = await fetch("/api/expenses");
       if (!expensesResponse.ok) {
@@ -69,7 +69,7 @@ const Dashboard = () => {
       }
       const expensesData = await expensesResponse.json();
       const expenses = Array.isArray(expensesData) ? expensesData : [];
-      
+
       // Fetch income
       const incomeResponse = await fetch("/api/income");
       if (!incomeResponse.ok) {
@@ -80,40 +80,59 @@ const Dashboard = () => {
 
       // Combine and sort all transactions
       const allTransactions = [
-        ...expenses.map(exp => ({ ...exp, type: "expense" })),
-        ...income.map(inc => ({ ...inc, type: "income" }))
+        ...expenses.map((exp) => ({ ...exp, type: "expense" })),
+        ...income.map((inc) => ({ ...inc, type: "income" })),
       ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
       // Calculate totals
-      const incomeSum = income.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-      const expenseSum = expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-      
+      const incomeSum = income.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+      );
+      const expenseSum = expenses.reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+      );
+
       setIncomeTotal(incomeSum);
       setExpenseTotal(expenseSum);
       setBalance(incomeSum - expenseSum);
-      
+
       // Get latest 5 transactions
       setLatestTransactions(allTransactions.slice(0, 5));
-      
+
       // Prepare pie chart data
       setPieData([
         { name: "Income", value: incomeSum },
-        { name: "Expenses", value: expenseSum }
+        { name: "Expenses", value: expenseSum },
       ]);
-      
+
       // Prepare monthly data
       const monthlyData = prepareMonthlyData(allTransactions);
       setMonthlyData(monthlyData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-      toast.error("Failed to load dashboard data");
+      // Optional: add toast notification or other UI for errors
     } finally {
       setLoading(false);
     }
   };
 
   const prepareMonthlyData = (transactions) => {
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const currentDate = new Date();
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(currentDate.getMonth() - 5);
@@ -126,15 +145,17 @@ const Dashboard = () => {
       monthlyData.push({
         month: months[date.getMonth()],
         income: 0,
-        expense: 0
+        expense: 0,
       });
     }
 
     // Fill in the data
-    transactions.forEach(transaction => {
+    transactions.forEach((transaction) => {
       const date = new Date(transaction.date);
       if (date >= sixMonthsAgo && date <= currentDate) {
-        const monthIndex = monthlyData.findIndex(d => d.month === months[date.getMonth()]);
+        const monthIndex = monthlyData.findIndex(
+          (d) => d.month === months[date.getMonth()]
+        );
         if (monthIndex !== -1) {
           if (transaction.type === "income") {
             monthlyData[monthIndex].income += Number(transaction.amount);
@@ -149,9 +170,9 @@ const Dashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -164,27 +185,39 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+    <div className="space-y-6 p-2 sm:p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500 text-sm sm:text-base">Overview of your financial activities</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
+            Dashboard
+          </h1>
+          <p className="text-gray-500 text-xs sm:text-sm md:text-base">
+            Overview of your financial activities
+          </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={() => router.push("/income")} className="flex-1 sm:flex-none">
-            <DollarSign className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            onClick={() => router.push("/income")}
+            className="flex-1 sm:flex-none text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
+          >
+            <DollarSign className="mr-1.5 h-3 w-3 sm:h-4 sm:w-4" />
             Add Income
           </Button>
-          <Button variant="outline" onClick={() => router.push("/expenses")} className="flex-1 sm:flex-none">
-            <Calendar className="mr-2 h-4 w-4" />
+          <Button
+            variant="outline"
+            onClick={() => router.push("/expenses")}
+            className="flex-1 sm:flex-none text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2"
+          >
+            <Calendar className="mr-1.5 h-3 w-3 sm:h-4 sm:w-4" />
             Add Expense
           </Button>
         </div>
       </div>
-      
+
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 p-4 sm:p-6 rounded-xl shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center text-green-700 dark:text-green-400">
               <ArrowUpCircle className="mr-2 h-5 w-5" />
@@ -197,8 +230,8 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
+
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 p-4 sm:p-6 rounded-xl shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-medium flex items-center text-red-700 dark:text-red-400">
               <ArrowDownCircle className="mr-2 h-5 w-5" />
@@ -211,37 +244,43 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
-        
-        <Card className={`bg-gradient-to-br ${
-          balance >= 0 
-            ? "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900" 
-            : "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900"
-        }`}>
+
+        <Card
+          className={`bg-gradient-to-br p-4 sm:p-6 rounded-xl shadow ${
+            balance >= 0
+              ? "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900"
+              : "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900"
+          }`}
+        >
           <CardHeader className="pb-2">
-            <CardTitle className={`text-lg font-medium flex items-center ${
-              balance >= 0 
-                ? "text-blue-700 dark:text-blue-400" 
-                : "text-red-700 dark:text-red-400"
-            }`}>
+            <CardTitle
+              className={`text-lg font-medium flex items-center ${
+                balance >= 0
+                  ? "text-blue-700 dark:text-blue-400"
+                  : "text-red-700 dark:text-red-400"
+              }`}
+            >
               <Wallet className="mr-2 h-5 w-5" />
               Current Balance
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${
-              balance >= 0 
-                ? "text-blue-700 dark:text-blue-400" 
-                : "text-red-700 dark:text-red-400"
-            }`}>
+            <div
+              className={`text-3xl font-bold ${
+                balance >= 0
+                  ? "text-blue-700 dark:text-blue-400"
+                  : "text-red-700 dark:text-red-400"
+              }`}
+            >
               {formatCurrency(balance)}
             </div>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <Card className="p-4 sm:p-6 rounded-xl shadow">
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingUp className="mr-2 h-5 w-5" />
@@ -260,10 +299,15 @@ const Dashboard = () => {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(value)} />
@@ -272,14 +316,16 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        
-        <Card>
+
+        <Card className="p-4 sm:p-6 rounded-xl shadow">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Calendar className="mr-2 h-5 w-5" />
               Monthly Trends
             </CardTitle>
-            <CardDescription>Income and expenses over the last 6 months</CardDescription>
+            <CardDescription>
+              Income and expenses over the last 6 months
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -295,7 +341,7 @@ const Dashboard = () => {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="month" className="text-sm" />
                 <YAxis className="text-sm" />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => formatCurrency(value)}
                   contentStyle={{
                     backgroundColor: "hsl(var(--background))",
@@ -304,26 +350,16 @@ const Dashboard = () => {
                   }}
                 />
                 <Legend />
-                <Bar 
-                  dataKey="income" 
-                  name="Income" 
-                  fill="#4ade80" 
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar 
-                  dataKey="expense" 
-                  name="Expense" 
-                  fill="#f87171" 
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="income" name="Income" fill="#4ade80" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expense" name="Expense" fill="#f87171" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Latest Transactions */}
-      <Card>
+      <Card className="p-4 sm:p-6 rounded-xl shadow">
         <CardHeader>
           <CardTitle>Latest Transactions</CardTitle>
           <CardDescription>Your most recent financial activities</CardDescription>
@@ -333,51 +369,81 @@ const Dashboard = () => {
             <table className="w-full min-w-[500px] text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Category</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Note</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Amount</th>
+                  <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-muted-foreground">
+                    Date
+                  </th>
+                  <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-muted-foreground">
+                    Category
+                  </th>
+                  <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-medium text-muted-foreground">
+                    Note
+                  </th>
+                  <th className="px-3 sm:px-4 py-2 text-right text-xs sm:text-sm font-medium text-muted-foreground">
+                    Amount
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {latestTransactions.map((transaction) => (
-                  <tr key={transaction._id} className="border-b hover:bg-muted/50">
-                    <td className="px-4 py-3 text-sm">
-                      {format(new Date(transaction.date), "MMM dd, yyyy")}
+                  <tr
+                    key={transaction._id}
+                    className="border-b hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="px-3 sm:px-4 py-2 whitespace-nowrap">
+                      {format(new Date(transaction.date), "MMM d, yyyy")}
                     </td>
-                    <td className="px-4 py-3 text-sm">{transaction.category}</td>
-                    <td className="px-4 py-3 text-sm">{transaction.description}</td>
-                    <td className={`px-4 py-3 text-right text-sm font-medium ${
-                      transaction.type === "income" ? "text-green-600" : "text-red-600"
-                    }`}>
+                    <td className="px-3 sm:px-4 py-2 whitespace-nowrap">
+                      {transaction.category}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2 whitespace-nowrap max-w-xs truncate">
+                      {transaction.note || "-"}
+                    </td>
+                    <td
+                      className={`px-3 sm:px-4 py-2 text-right font-semibold whitespace-nowrap ${
+                        transaction.type === "income"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
                       {transaction.type === "income" ? "+" : "-"}
                       {formatCurrency(transaction.amount)}
                     </td>
                   </tr>
                 ))}
+                {latestTransactions.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4 text-muted-foreground">
+                      No transactions found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
-          <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => router.push("/income")}
-              className="flex items-center justify-center"
-            >
-              <DollarSign className="mr-2 h-4 w-4" />
-              View All Income
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => router.push("/expenses")}
-              className="flex items-center justify-center"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              View All Expenses
-            </Button>
-          </div>
         </CardContent>
       </Card>
+
+      <style jsx>{`
+        /* Reduce padding on mobile */
+        @media (max-width: 640px) {
+          div.space-y-6.p-2.sm\\:p-4.md\\:p-6 {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
+          .grid.grid-cols-1.md\\:grid-cols-3.gap-3.sm\\:gap-6 {
+            gap: 0.75rem !important; /* smaller gap on mobile */
+          }
+          table.w-full.min-w-\\[500px\\] {
+            min-width: 0 !important; /* allow table to shrink on small screens */
+          }
+          /* Adjust buttons on mobile */
+          .flex.gap-2.w-full.sm\\:w-auto > button {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            font-size: 0.75rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
